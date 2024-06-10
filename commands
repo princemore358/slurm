@@ -1,0 +1,53 @@
+to add new partition go in slurm.conf file and add
+PartitionName=sample Nodes=ALL Default=YES MaxTime=00:00:00 DefaultTime=00:00:00 State=UP
+
+to update state of node
+scontrol update Nodename=compute1 State=DRAIN Reason="health-issue"
+
+srun -N1 -n1 --time=05:00 --pty /bin/bash
+
+Add group
+groupadd -g 10000 hpcsa
+
+add user in that group
+useradd -u 10001 -g 10000 -m -d /nfs/hpcsa -s /bin/bash hpcsa
+passwd hpcsa
+(on all nodes)
+
+ssh-keygen -t rsa
+cd .ssh/
+ls
+touch authorized_keys && chmod 600 authorized_keys
+cp id-rsa.pub authorized_keys
+ssh compute1 and 2
+
+creating account and add user in that
+sacctmgr add account "chemistry" Description="sample acc" Organization=Cdac
+sacctmgr show assoc
+sacctmgr create user_name=hpcsa DefaultAccount=chemistry
+sacctmgr show assoc
+sacctmgr remove user name=hpcsa Account=chemistry
+
+sacctmgr show user name=hpcsa
+sacctmgr show assoc format=User,Account
+sacctmgr modify user hpcsa set MaxJobs=2
+sacctmgr show  assoc format=Account,User,MaxJobs
+sacctmgr show user name=hpcsa withassoc format=user,DefaultAccount
+
+sreport
+
+to create reservation
+scontrol create reservation=myreserv Account=chemistry user=hpcsa Nodes=ALL Starttime=00:00:00 Duration=02:00:00
+scontrol delete reservation=myreserv
+scontrol create reservation=myreserv Partition=testp user=hpcsa Nodes=ALL Starttime=00:00:00 Duration=00:20:00
+scontrol show reservation
+
+sbank
+sbank deposit -c cluster -a chemistry -t 1000(hours)
+sbank project create -c cluster -a myproject
+sbank project useradd -c cluster -a myproject -u hpcsa
+sbank project -c cluster -a myproject -t 2
+sbank balance statement -A
+
+
+
